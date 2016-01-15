@@ -2,11 +2,9 @@
 
 'use strict';
 
-var w = require('winston');
-var car = require('./car');
-var vm = require('./vm');
-var vnc = require('./vnc');
+var w = require('winston')
 var nconf = require('nconf');
+var fs = require('fs');
 var rl = require('readline').createInterface({
   input: process.stdin,
   output: process.stdout
@@ -15,8 +13,11 @@ var rl = require('readline').createInterface({
 // read config
 nconf.file({ file: './config.json' });
 
-// init & start vnc proxy (websockify)
-var v = new vnc(9500);
+
+var car = require('./car');
+var vm = require('./vm');
+var honet = new (require('./honetwork'))();
+var vnc = new (require('./vnc'))(9500);
 
 rl.question('Press key to start...', function(evt) {
   vm.addVm('2483cf72-be50-4896-8a37-3ea8b33ef5a7', 'onlinux_debian', new car(), false, function(err, machine) {
@@ -31,9 +32,8 @@ rl.question('Press key to start...', function(evt) {
         if (err) {
           return w.error(err);
         }
-        console.log('server listening:');
-        console.log(conCfg);
-      })
+        console.warn('New CaR server listening @ ' + conCfg.host + ':' + conCfg.port);
+      });
       machine.car.startServer();
       machine.car.on('init', function(err, socket) {
         if(err) {
@@ -43,9 +43,6 @@ rl.question('Press key to start...', function(evt) {
       });
     });
   });
-  function writeToken(host, port) {
-
-  }
 });
 
 
