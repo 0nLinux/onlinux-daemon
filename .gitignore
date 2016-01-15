@@ -1,3 +1,5 @@
 node_modules/
 out/
 config.json
+tokens/
+logs/
