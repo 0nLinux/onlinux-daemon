@@ -12,7 +12,7 @@ var nconf = require('nconf');
 var lastPort = 15120; // OL# => 1512#
 
 var Car = function(conf) {
-  this._host = nconf.get('hoNet').ip;
+  this._host = nconf.get('HostOnlyNetwork').ip;
   this._port = ++lastPort;
   this._server = null;
 };
