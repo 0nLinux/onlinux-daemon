@@ -7,26 +7,30 @@
 var net = require('net');
 var util = require('util');
 var w = require('winston');
+var nconf = require('nconf');
 
 var lastPort = 15120; // OL# => 1512#
-var stdConf = {
-  host: '192.168.56.101'
-};
 
 var Car = function(conf) {
-  var self = this;
-  if (void 0 === conf) {
-    conf = stdConf;
-  }
-  this._host = (void 0 !== conf.host) ? conf.host : stdConf.host;
-  this._port = (void 0 !== conf.port) ? conf.port : ++lastPort;
+  this._host = nconf.get('hoNet').ip;
+  this._port = ++lastPort;
   this._server = null;
 };
 util.inherits(Car, require('events').EventEmitter);
 
 Car.prototype.startServer = function() {
   var self = this;
-  this._server = this.getServer();
+  this._server = net.createServer();
+  this._server.listen({
+    host: this._host,
+    port: this._port,
+    exclusive: true
+  }, function() {
+    self.emit('listening', null, {
+      host: self._server.address().address,
+      port: self._server.address().port
+    });
+  });
   this._server.on('error', handleError);
   this._server.on('close', handleClose);
   this._server.on('connection', function(socket) {
@@ -34,35 +38,13 @@ Car.prototype.startServer = function() {
   });
 }
 
-Car.prototype.getServer = function() {
-  var self = this;
-  var s = net.createServer();
-  s.listen({
-    host: this._host,
-    port: this._port,
-    exclusive: true
-  }, function() {
-    /**
-     * Server listening event.
-     * @type {object}
-     * @property {string} host IP server is listening on.
-     * @property {number} port Port server is listening on.
-     */
-    self.emit('listening', null, {
-      host: s.address().address,
-      port: s.address().port
-    });
-  });
-  return s;
-};
-
 var handleError = function(err) {
-  w.error('Server error:');
+  w.error('CaR server error:')
   w.error(err);
 };
 
 var handleClose = function() {
-  w.info('Server closed');
+  w.warn('CaR server closed.');
 };
 
 Car.prototype.newConnection = function(socket, ctx) {
