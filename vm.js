@@ -48,7 +48,7 @@ Machine.prototype.createToken = function() {
   var self = this;
   var seed = execFileSync('/bin/dd', ['if=/dev/urandom', 'bs=3', 'count=1', 'status=none']);
   var token = xxhash.hash(new Buffer(this.uuid), seed);
-  this.tokenFile = process.cwd() + nconf.get('tokenDir') + token;
+  this.tokenFile = nconf.get('VNC').tokenDir + token;
   fs.writeFile(this.tokenFile, token + ': ' + this.host + ':' + this.vncPort,
                function (err) {
                  if (err) {

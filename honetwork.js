@@ -5,32 +5,27 @@ var execFileSync = require('child_process').execFileSync;
 
 var HostOnlyNetwork = function() {
   this.iface;
-  this.cfg = nconf.get('HostOnlyNetwork');
+  this._config = nconf.get('HostOnlyNetwork');
+  console.log('Setting up host only network...');
   this.setup();
 };
 
 // setup host-only networt adapter for VMs
 HostOnlyNetwork.prototype.setup = function() {
   var iface = this.getInterface();
-  if (iface) {
+  console.log('Found host only interface: ' + iface);
+  if (iface/* === this._config.iface*/) {
+    console.log('Configuring ' + iface + ' to ' + this._config.ip);
     execFileSync('vboxmanage',
                ['hostonlyif', 'ipconfig',
-                iface, '--ip', this.cfg.ip]);
+                iface, '--ip', this._config.ip]);
     this.iface = iface;
   }
 };
 
 HostOnlyNetwork.prototype.getInterface = function() {
   var ifsResult = execFileSync('vboxmanage', ['list', 'hostonlyifs']).toString();
-  var ifsLines = ifsResult.split('\n');
-  var lineRx = /(\w*?):\s*(.*)/;
-  var m;
-  console.log(ifsLines);
-  for (var i = ifsLines.length - 1; i >= 0; i--) {
-    if ((m = lineRx.exec(ifsLines[i])) && m[1] === 'Name') {
-      return m[2];
-    }
-  }
+  return /(\w*?):\s*(.*)/.exec(ifsResult.split('\n')[0])[2];
 };
 
 module.exports = HostOnlyNetwork;
