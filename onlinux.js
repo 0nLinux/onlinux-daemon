@@ -10,6 +10,10 @@ var rl = require('readline').createInterface({
   output: process.stdout
 });
 
+// create tmp dir
+if(!fs.existsSync('/tmp/.onlinux-token/')) {
+  fs.mkdirSync('/tmp/.onlinux-token');
+}
 // read config
 nconf.file({ file: './config.json' });
 
@@ -18,6 +22,7 @@ var car = require('./car');
 var vm = require('./vm');
 var honet = new (require('./honetwork'))();
 var vnc = new (require('./vnc'))(9500);
+
 
 rl.question('Press key to start...', function(evt) {
   vm.addVm('2483cf72-be50-4896-8a37-3ea8b33ef5a7', 'onlinux_debian', new car(), false, function(err, machine) {
