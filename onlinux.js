@@ -22,7 +22,11 @@ var car = require('./car');
 var vm = require('./vm');
 var honet = new (require('./honetwork'))();
 var vnc = new (require('./vnc'))(9500);
+var clients = new (require('./clients'))();
 
+clients.on('clientreq', function(resp) {
+  
+});
 
 rl.question('Press key to start...', function(evt) {
   vm.addVm('2483cf72-be50-4896-8a37-3ea8b33ef5a7', 'onlinux_debian', new car(), false, function(err, machine) {
