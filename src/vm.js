@@ -106,12 +106,9 @@ var VM = {
       }
     }
     var key = Object.keys(by)[0];
-    for (var i = 0; i <= VM.machines.length - 1; i++) {
-      if (VM.machines[i][key] === by[key]) {
-        return VM.machines[i];
-      }
-    }
-    return null;
+    return VM.machines.filter(function(machine) {
+      return by[key] === machine[key];
+    })[0] || null;
   },
 
   _isUUID: function(val) {
@@ -119,9 +116,7 @@ var VM = {
   },
 
   _getMachineID: function(machine) {
-    return VM.machines.filter(function(val) {
-      return val.uuid === machine.uuid;
-    });
+    
   }
 };
 

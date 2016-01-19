@@ -29,15 +29,6 @@ var kdone = function() {
       return w.error(err);
     }
     console.log(machine.name + ' (' + machine.uuid + ') added.');
-    /* !!!!!!!! DEBUG OVERWRITE !!!!!!!!!! */
-    var distro = 'debian';
-    /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-    vm.startVM({name: 'onlinux_' + distro}, function(err, machine) {
-
-      if (err) {
-        return w.error(err);
-      }
-    });
   });
 };
 
