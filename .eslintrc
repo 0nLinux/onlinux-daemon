@@ -142,7 +142,7 @@
     "no-void": 0,
     "no-warning-comments": 0,
     "no-with": 2,
-    "no-extra-parens": 2,
+    "no-extra-parens": [2, "functions"],
     "one-var": 0,
     "operator-assignment": 0,
     "operator-linebreak": [2, "after"],
