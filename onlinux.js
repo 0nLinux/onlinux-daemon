@@ -2,61 +2,57 @@
 
 'use strict';
 
-var w = require('winston')
+var w = require('winston');
 var nconf = require('nconf');
 var fs = require('fs');
-var rl = require('readline').createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+var async = require('async');
+var readline = require('readline');
+var rl = readline.createInterface(process.stdin, process.stdout);
 
-// create tmp dir
-if(!fs.existsSync('/tmp/.onlinux-token/')) {
-  fs.mkdirSync('/tmp/.onlinux-token');
-}
 // read config
 nconf.file({ file: './config.json' });
 
+// create tmp dir
+if (!fs.existsSync(nconf.get('VNC').tokenDir)) {
+  fs.mkdirSync(nconf.get('VNC').tokenDir);
+}
 
-var car = require('./car');
-var vm = require('./vm');
-var honet = new (require('./honetwork'))();
-var vnc = new (require('./vnc'))(9500);
-var clients = new (require('./clients'))();
+var car = require('./src/car');
+var vm = require('./src/vm');
+var honet = require('./src/honetwork');
+var vnc = require('./src/vnc');
+var clients = require('./src/clients');
 
-clients.on('clientreq', function(resp) {
-  
-});
-
-rl.question('Press key to start...', function(evt) {
-  vm.addVm('2483cf72-be50-4896-8a37-3ea8b33ef5a7', 'onlinux_debian', new car(), false, function(err, machine) {
+var kdone = function() {
+  vm.addVM('2483cf72-be50-4896-8a37-3ea8b33ef5a7', 'onlinux_debian', car, false, function(err, machine) {
     if (err) {
       return w.error(err);
     }
-    vm.startVm({uuid: machine.uuid}, function(err) {
+    console.log(machine.name + ' (' + machine.uuid + ') added.');
+    /* !!!!!!!! DEBUG OVERWRITE !!!!!!!!!! */
+    var distro = 'debian';
+    /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+    vm.startVM({name: 'onlinux_' + distro}, function(err, machine) {
+
       if (err) {
         return w.error(err);
       }
-      machine.car.on('listening', function(err, conCfg) {
-        if (err) {
-          return w.error(err);
-        }
-        console.warn('New CaR server listening @ ' + conCfg.host + ':' + conCfg.port);
-      });
-      machine.car.startServer();
-      machine.car.on('init', function(err, socket) {
-        if(err) {
-          return w.error(err);
-        }
-        socket.write(machine.car.message('cmd', 'reqvnc', null));
-      });
     });
   });
-});
+};
 
-
-
-/*var obj = object.prototype._create({
-  x: x,
-  y: y
-});*/
+// spin up:
+// 1. Setup VirtualBox "Host-Only Network" [honet]
+// 2. Start CaR server [car]
+// 3. Start VNC proxy (WebSockify) [vnc]
+// 4. Start server for clients [client]
+async.series([honet.setup, car.startServer,
+              vnc.startProxy, clients.startServer, kdone],
+              function(err) {
+                if (err) {
+                  console.log('STARTUP FAILED');
+                  console.log(err);
+                  process.exit(1);
+                }
+              });
+rl.prompt();

@@ -1,0 +1,27 @@
+#===============================#
+# OnLinux Daemon unit		#
+#  /lib/systemd/system          #
+#-------------------------------#
+# https://linux.online/         #
+# Version:  0.0.1               #
+# Date:     2016/01/16          #
+#===============================#
+
+[Unit]
+Description=OnLinux daemon service unit
+After=network-online.target
+
+[Service]
+PIDFile=/var/run/onlinux
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=OnLinux
+WorkingDirectory=/usr/lib/onlinux
+Type=simple
+ExecStart=/usr/sbin/onlinux
+TimeoutStartSec=30s
+TimeoutStopSec=30s
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target
