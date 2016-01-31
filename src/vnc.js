@@ -22,7 +22,7 @@ var VNC = {
       '--token-source', VNC._config.tokenDir,
       '--log-file', VNC._config.logFile, '--daemon'
     ];
-    VNC.isRunning(true, function(running, pid) {
+    VNC.isRunning(false, function(running, pid) {
       if (!running) {
         console.log('Starting VNC proxy (WebSockify)');
         VNC._proxyProc = childProc.spawn('./websockify/run', VNC._websockifyArgs);
@@ -41,6 +41,7 @@ var VNC = {
           return cb(new Error('VNC Proxy exited with code: ' + code));
         });
       }
+      return cb(null);
     });
   },
 
@@ -64,7 +65,7 @@ var VNC = {
         console.log('WebSockify running with pid ' + pid + ' - KILL REQUESTED...');
         return VNC.killProxy(pid, cb);
       }
-      console.log('WebSockify running at ' + pid);
+      console.log('WebSockify running at pid ' + pid);
       return cb(true, pid);
     });
   }
