@@ -50,6 +50,10 @@ rl.on('line', function(cmd) {
         w.error(err);
       }
     });
+    break;
+  case 'q':
+    process.exit(0);
+    break;
   }
 });
 
