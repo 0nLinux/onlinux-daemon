@@ -29,7 +29,7 @@ var Clients = {
     var m;
     var distro = '';
     var guid = '';
-    // DEBUG!! XSS vulnerability                  \/
+    // DEBUG
     resp.setHeader('Access-Control-Allow-Origin', '*');
     // !!!!!!!
     resp.setHeader('Content-Type', 'application/json');
@@ -37,9 +37,9 @@ var Clients = {
       // I Can Haz VM?
       distro = m[1].toLowerCase();
       guid = m[2];
-      /* !!!!!!!! DEBUG OVERWRITE !!!!!!!!!! */
+      // DEBUG
       distro = 'debian';
-      /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+      // !!!!!!!
       console.log(distro + ' VM requested by a client (guid: ' + guid + ').');
       vm.startVM({name: 'onlinux_' + distro}, function(err, machine) {
         if (err) {

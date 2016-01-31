@@ -5,7 +5,7 @@ var xxhash = require('xxhash');
 var execFileSync = require('child_process').execFileSync;
 var nconf = require('nconf');
 
-var Machine = function(uuid, name, car) {
+var Machine = function(uuid, name, type, car) {
   var self = this;
   this.uuid = uuid;
   this.name = name;
@@ -14,6 +14,8 @@ var Machine = function(uuid, name, car) {
   this.vncPort = 0;
   this.vncToken = null;
   this.tokenFile = null;
+  this.isRunning = false;
+  this.type = type;
   if (this.car) {
     this.car._ee.on('init', function(err, socket) {
       if (err) {

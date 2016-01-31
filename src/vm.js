@@ -23,19 +23,20 @@ var VM = {
 
   /**
    * Add a VirtualBox VM to the service.
-   * @param {String}   uuid VBox id string of the VM.
-   * @param {String}   name VBox name of the VM.
-   * @param {Object}   car  Control and Report object, stream, dunno yet...
-   * @param {Bool}     save Save VM data to config.json if true.
-   * @param {Function} cb   You guess! Hint: It's not chicken burger.
+   * @param {String}    uuid VBox id string of the VM
+   * @param {String}    name VBox name of the VM
+   * @param {String}    type VM type, e.g. distribution
+   * @param {Object}    car  Control and Report object
+   * @param {Bool}      save Save VM data to config.json if true
+   * @param {module:vm.vboxCb} cb
    */
-  addVM: function(uuid, name, car, save, cb) {
-    if (!uuid || uuid === '' || !name || name === '') {
+  addVM: function(uuid, name, type, car, save, cb) {
+    if (!uuid || uuid === '' || !name || name === '' || !type || type === '') {
       return cb(new Error('EMISSARG'));
     }
     for (var i = 0; i <= 2; i++) {
       if (void 0 === VM.machines[i]) {
-        VM.machines[i] = new Machine(uuid, name, car);
+        VM.machines[i] = new Machine(uuid, name, type, car);
         if (save) {
           nconf.set('machines', VM.machines);
           nconf.save(function(err) {
@@ -52,51 +53,71 @@ var VM = {
     }
   },
 
-  /**
-   * Delete a VirtualBox VM from the service.
-   * @param  {Number}   id Id in module:vm~machines
-   * @param  {Function} cb
-   */
-  delVM: function(by, cb) {
-    var machineID = VM._getMachineID(VM._getMachine(by));
-    VM.machines[machineID] = void 0;
-    cb(null);
+  delVM: function(uuid, cb) {
+    var mIndex = VM._getMachineIndex(uuid);
+    if (VM.machines[mIndex].isRunning) {
+      VM.shutdownVM(VM.machines[mIndex], function(err) {
+        if (err) {
+          cb(err);
+        }
+        VM.machines.splice(mIndex, 1);
+        cb(null);
+      });
+    } else {
+      VM.machines.splice(mIndex, 1);
+      cb(null);
+    }
   },
 
-  /**
-   * Start a VirtualBox VM.
-   * @param  {Number}   id Id in the VM pool.
-   * @param  {module:vm.vboxCb} cb
-   */
-  startVM: function(by, cb) {
-    var machine = VM._getMachine(by);
+  startVM: function(machine, cb) {
     vbox.start(machine.uuid, function(err) {
+      if (err) {
+        return cb(err);
+      }
+      machine.isRunning = true;
       machine.car._ee.on('init', function(err, socket) {
         if (err) {
           return cb(err);
         }
         socket.write(machine.car.message('cmd', 'reqvnc', null));
       });
-      cb(err, (!err) ? machine : void 0);
     });
   },
 
-  /**
-   * Send acpi shutdown signal to VM.
-   * @param  {Number}   id Id in the VM pool.
-   * @param  {module:vm.vboxCb} cb
-   */
-  shutdownVM: function(by, cb) {
-    var machine = VM._getMachine(by);
-    vbox.acpipowerbutton(machine.uuid, cb);
+  shutdownVM: function(machine, cb) {
+    vbox.acpipowerbutton(machine.uuid, function(err) {
+      if (err) {
+        return cb(err);
+      }
+      machine.isRunning = false;
+      cb();
+    });
   },
 
-  getMachineByName: function(name) {
-    return VM._getMachine({ name: name });
+  getRunning: function(type) {
+    return VM.machines.filter(function(machine) {
+      if (void 0 !== type && machine.type !== type) {
+        return false;
+      }
+      return machine.isRunning;
+    });
   },
-  getMachineByUUID: function(uuid) {
-    return VM._getMachine({ uuid: uuid });
+
+  getAvailable: function(type) {
+    return VM.machines.filter(function(machine) {
+      if (void 0 !== type && machine.type !== type) {
+        return false;
+      }
+      return !machine.isRunning;
+    });
   },
+
+  getAll: function(type) {
+    return VM.machines.filter(function(machine) {
+      return (void 0 === type || machine.type === type);
+    });
+  },
+
   _getMachine: function(by) {
     if (typeof by === 'string') {
       if (VM._isUUID(by)) {
@@ -115,8 +136,11 @@ var VM = {
     return (/.{8}-.{4}-.{4}-.{4}-.{12}/.exec(val) !== null);
   },
 
-  _getMachineID: function(machine) {
-    
+  _getMachineIndex: function(machine) {
+    if (typeof machine === 'string') {
+      machine = VM._getMachine(machine);
+    }
+    return VM.machines.indexOf(machine);
   }
 };
 
