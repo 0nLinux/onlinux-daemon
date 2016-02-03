@@ -40,8 +40,9 @@ var VNC = {
           }
           return cb(new Error('VNC Proxy exited with code: ' + code));
         });
+      } else {
+        return cb(null);
       }
-      return cb(null);
     });
   },
 
