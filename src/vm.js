@@ -77,10 +77,11 @@ var VM = {
       machine.isRunning = true;
       machine.car._ee.on('init', function(err, socket) {
         if (err) {
-          return cb(err);
+          return console.log(err);
         }
         socket.write(machine.car.message('cmd', 'reqvnc', null));
       });
+      cb(null, machine);
     });
   },
 

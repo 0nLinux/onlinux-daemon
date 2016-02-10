@@ -41,14 +41,19 @@ var Clients = {
       distro = 'debian';
       // !!!!!!!
       console.log(distro + ' VM requested by a client (guid: ' + guid + ').');
-      vm.startVM({name: 'onlinux_' + distro}, function(err, machine) {
-        if (err) {
-          return console.log(err);
-        }
-        Clients._clients.push(new Client(distro, guid, machine));
-        return resp.end(JSON.stringify({ status: 'booting' }));
-        // Clients._ee.emit('clientreq', guid, distro, resp);
-      });
+      var avail = vm.getAvailable(distro);
+      if (avail.length > 0) {
+        vm.startVM(avail[0], function(err, machine) {
+          if (err) {
+            return console.log(err);
+          }
+          Clients._clients.push(new Client(distro, guid, machine));
+          return resp.end(JSON.stringify({ status: 'booting' }));
+          // Clients._ee.emit('clientreq', guid, distro, resp);
+        });
+      } else {
+        return resp.end(JSON.stringify({ status: 'error', err: 'ENOVMAV' }));
+      }
     } else if ((m = /yda\?(.*)/.exec(req.url))) {
       guid = m[1];
       console.log(guid + ' is asking for VM status.');
