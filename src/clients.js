@@ -38,7 +38,7 @@ var Clients = {
       distro = m[1].toLowerCase();
       guid = m[2];
       // DEBUG
-      distro = 'debian';
+      // distro = 'debian';
       // !!!!!!!
       console.log(distro + ' VM requested by a client (guid: ' + guid + ').');
       var avail = vm.getAvailable(distro);
